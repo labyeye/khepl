@@ -43,7 +43,7 @@ const ImageSection = styled.div`
 const LoginImage = styled.div`
   width: 100%;
   height: 400px;
-  background-image: url('https://pbs.twimg.com/profile_images/697013668345589760/Rkfu4ZTw_400x400.png');
+  background-image: url('https://www.candymarketing.co.uk/wp-content/uploads/2023/08/Gulf-Oil_Main-1024x577.png');
   background-size: cover;
   background-position: center;
   border-radius: 10px;
