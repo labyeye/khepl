@@ -30,7 +30,7 @@ const AdminDashboard = () => {
         }
 
         const response = await axios.get(
-          "https://laxmi-lube.onrender.com/api/admin/dashboard",
+          "https://kalahanu-outstanding.onrender.com/api/admin/dashboard",
           {
             headers: {
               Authorization: `Bearer ${token}`,

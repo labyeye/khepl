@@ -23,7 +23,7 @@ const BillsAdd = () => {
     current: 0,
     total: 0,
   });
-  const API_URL = "https://laxmi-lube.onrender.com/api";
+  const API_URL = "https://kalahanu-outstanding.onrender.com/api";
   const handleImport = async (e) => {
     e.preventDefault();
     setError("");

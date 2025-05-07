@@ -9,7 +9,7 @@ const BillCollectionHistory = () => {
   useEffect(() => {
     const fetchCollections = async () => {
       try {
-        const response = await axios.get('https://laxmi-lube.onrender.com/api/collections');
+        const response = await axios.get('https://kalahanu-outstanding.onrender.com/api/collections');
         setCollections(response.data);
       } catch (error) {
         console.error('Error fetching collections:', error);

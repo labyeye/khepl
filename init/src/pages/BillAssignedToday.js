@@ -90,7 +90,7 @@ const BillAssignedToday = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Authentication token not found");
 
-      const response = await axios.get(`https://laxmi-lube.onrender.com/api/users/me`, {
+      const response = await axios.get(`https://kalahanu-outstanding.onrender.com/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -106,7 +106,7 @@ const BillAssignedToday = () => {
   const fetchAllAssignedCustomers = async () => {
     try {
       const response = await axios.get(
-        "https://laxmi-lube.onrender.com/api/bills/assigned-customers",
+        "https://kalahanu-outstanding.onrender.com/api/bills/assigned-customers",
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -138,7 +138,7 @@ const BillAssignedToday = () => {
       setError("");
 
       const response = await axios.get(
-        "https://laxmi-lube.onrender.com/api/bills/bills-assigned-today",
+        "https://kalahanu-outstanding.onrender.com/api/bills/bills-assigned-today",
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           params: {
@@ -214,7 +214,7 @@ const BillAssignedToday = () => {
 
       // First create the collection record
       await axios.post(
-        "https://laxmi-lube.onrender.com/api/collections",
+        "https://kalahanu-outstanding.onrender.com/api/collections",
         collectionPayload,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -224,7 +224,7 @@ const BillAssignedToday = () => {
       // Then update the bill status
       const newDueAmount = dueAmount - paidAmount;
       await axios.put(
-        `https://laxmi-lube.onrender.com/api/bills/${selectedBill._id}`,
+        `https://kalahanu-outstanding.onrender.com/api/bills/${selectedBill._id}`,
         {
           dueAmount: newDueAmount,
           status: newDueAmount <= 0 ? "Paid" : "Partially Paid",

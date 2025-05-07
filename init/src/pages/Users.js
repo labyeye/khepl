@@ -22,7 +22,7 @@ const Users = () => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('https://laxmi-lube.onrender.com/api/users', {
+        const response = await axios.get('https://kalahanu-outstanding.onrender.com/api/users', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -43,7 +43,7 @@ const Users = () => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     
     try {
-      await axios.delete(`https://laxmi-lube.onrender.com/api/users/${userId}`, {
+      await axios.delete(`https://kalahanu-outstanding.onrender.com/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setMessage("User deleted successfully");
@@ -61,19 +61,19 @@ const Users = () => {
     
     try {
       if (editMode) {
-        await axios.put(`https://laxmi-lube.onrender.com/api/users/${currentUserId}`, newUser, {
+        await axios.put(`https://kalahanu-outstanding.onrender.com/api/users/${currentUserId}`, newUser, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setMessage("User updated successfully");
       } else {
-        await axios.post("https://laxmi-lube.onrender.com/api/users", newUser, {
+        await axios.post("https://kalahanu-outstanding.onrender.com/api/users", newUser, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setMessage("User added successfully");
       }
 
       // Refresh user list
-      const response = await axios.get('https://laxmi-lube.onrender.com/api/users', {
+      const response = await axios.get('https://kalahanu-outstanding.onrender.com/api/users', {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       setUsers(response.data);

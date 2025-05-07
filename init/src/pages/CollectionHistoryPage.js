@@ -38,7 +38,7 @@ const CollectionsHistory = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Authentication token not found");
 
-      const response = await axios.get(`https://laxmi-lube.onrender.com/api/users/me`, {
+      const response = await axios.get(`https://kalahanu-outstanding.onrender.com/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -58,7 +58,7 @@ const CollectionsHistory = () => {
       setLoading(true);
       setError("");
 
-      let url = "https://laxmi-lube.onrender.com/api/collections";
+      let url = "https://kalahanu-outstanding.onrender.com/api/collections";
       const params = new URLSearchParams();
 
       if (searchTerm) params.append("search", searchTerm);

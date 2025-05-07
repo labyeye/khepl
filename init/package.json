@@ -2,7 +2,7 @@
   "name": "init",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://laxmi-lube.onrender.com",
+  "proxy": "https://kalahanu-outstanding.onrender.com",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",

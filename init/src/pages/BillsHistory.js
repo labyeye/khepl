@@ -7,7 +7,7 @@ const BillsHistory = () => {
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const response = await axios.get('https://laxmi-lube.onrender.com/api/staff/bills-history', {
+        const response = await axios.get('https://kalahanu-outstanding.onrender.com/api/staff/bills-history', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setBills(response.data);

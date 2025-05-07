@@ -14,7 +14,7 @@ import "react-date-range/dist/theme/default.css";
 import Layout from "../components/Layout";
 import { format } from "date-fns";
 
-const API_BASE_URL = "https://laxmi-lube.onrender.com/api/admin/reports";
+const API_BASE_URL = "https://kalahanu-outstanding.onrender.com/api/admin/reports";
 
 const ReportPage = () => {
   const [reports, setReports] = useState([]);
