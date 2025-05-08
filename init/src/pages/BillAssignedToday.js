@@ -34,6 +34,7 @@ const BillAssignedToday = () => {
   });
   const [bills, setBills] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
+  const imageWidth = window.innerWidth < 768 ? "80%" : "50%";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -702,6 +703,18 @@ const BillAssignedToday = () => {
                     {/* Payment mode specific fields */}
                     {paymentMode === "upi" && (
                       <>
+                      <img
+                          style={{
+                            maxWidth: "100%",
+                            width: imageWidth,
+                            height: "auto",
+                            borderRadius: 10,
+                            margin: "10px auto",
+                            display: "block",
+                          }}
+                          src={require("../../src/image/qr.jpeg")}
+                          alt="QR Code"
+                        />
                         <FormGroup>
                           <Label>UPI ID</Label>
                           <Input
