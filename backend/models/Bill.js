@@ -6,7 +6,6 @@ const BillSchema = new mongoose.Schema(
       type: String,
       required: [true, "Bill number is required"],
       trim: true,
-      unique: true,
       uppercase: true
     },
     retailer: {
