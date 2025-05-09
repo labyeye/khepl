@@ -32,9 +32,12 @@ const BillAssignedToday = () => {
     name: "Loading...",
     role: "Collections",
   });
+  const [collectionDate, setCollectionDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   const [bills, setBills] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
-  const imageWidth = window.innerWidth < 768 ? "80%" : "50%";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,7 +47,7 @@ const BillAssignedToday = () => {
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentMode, setPaymentMode] = useState("cash");
+  const [paymentMode, setPaymentMode] = useState("Cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [paymentRemarks, setPaymentRemarks] = useState("");
@@ -176,6 +179,7 @@ const BillAssignedToday = () => {
     fetchBillsAssignedToday();
     fetchAllAssignedCustomers();
   }, [selectedDay]);
+  const imageWidth = window.innerWidth < 768 ? "80%" : "50%";
 
   // In BillAssignedToday.js, update the handleCollectionSubmit function:
   const handleCollectionSubmit = async () => {
@@ -205,8 +209,9 @@ const BillAssignedToday = () => {
         amountCollected: roundedAmount,
         paymentMode,
         remarks: paymentRemarks,
+        collectedOn: collectionDate, // Add this line
         paymentDetails:
-          paymentMode === "cash"
+          paymentMode === "Cash"
             ? {
                 receiptNumber: paymentDetails.receiptNumber || "Money Received",
               }
@@ -241,7 +246,7 @@ const BillAssignedToday = () => {
       // Reset form
       setSelectedBill(null);
       setPaymentAmount("");
-      setPaymentMode("cash");
+      setPaymentMode("Cash");
       setPaymentRemarks("");
       setPaymentDetails({
         upiId: "",
@@ -306,7 +311,7 @@ const BillAssignedToday = () => {
     setSelectedBill(null);
     setSelectedCustomer(null);
     setPaymentAmount("");
-    setPaymentMode("cash");
+    setPaymentMode("Cash");
     setPaymentRemarks("");
     setSubmitError("");
     setShowCollectionModal(true);
@@ -634,6 +639,15 @@ const BillAssignedToday = () => {
                         {formatCurrency(selectedBill.dueAmount.toFixed(2))}
                       </div>
                     </SelectedBillInfo>
+                    <FormGroup>
+                      <Label>Collection Date</Label>
+                      <Input
+                        type="date"
+                        value={collectionDate}
+                        onChange={(e) => setCollectionDate(e.target.value)}
+                        max={new Date().toISOString().split("T")[0]} // Can't be future date
+                      />
+                    </FormGroup>
 
                     <FormGroup>
                       <Label>Amount Paid</Label>
@@ -678,13 +692,13 @@ const BillAssignedToday = () => {
                           });
                         }}
                       >
-                        <option value="cash">Cash</option>
+                        <option value="Cash">Cash</option>
                         <option value="cheque">Cheque</option>
                         <option value="bank_transfer">Bank Transfer</option>
                         <option value="upi">UPI</option>
                       </Select>
                     </FormGroup>
-                    {paymentMode === "cash" && (
+                    {paymentMode === "Cash" && (
                       <FormGroup>
                         <Label>Receipt Number</Label>
                         <Input
@@ -703,7 +717,7 @@ const BillAssignedToday = () => {
                     {/* Payment mode specific fields */}
                     {paymentMode === "upi" && (
                       <>
-                      <img
+                        <img
                           style={{
                             maxWidth: "100%",
                             width: imageWidth,
@@ -717,6 +731,7 @@ const BillAssignedToday = () => {
                         />
                         <FormGroup>
                           <Label>UPI ID</Label>
+
                           <Input
                             type="text"
                             value={paymentDetails.upiId}
@@ -842,6 +857,7 @@ const BillAssignedToday = () => {
     </DashboardLayout>
   );
 };
+
 // Responsive Styled Components for BillAssignedToday
 const DashboardLayout = styled.div`
   display: flex;
@@ -1064,7 +1080,6 @@ const ButtonGroup = styled.div`
 
 const FormGroup = styled.div`
   margin-bottom: 15px;
-
   @media (min-width: 768px) {
     margin-bottom: 20px;
   }

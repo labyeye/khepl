@@ -9,7 +9,7 @@ const exceljs = require("exceljs");
 // Helper function to filter payment details by payment mode
 const getFilteredPaymentDetails = (paymentMode, paymentDetails) => {
   if (!paymentDetails) {
-    return paymentMode === "cash" 
+    return paymentMode === "Cash" 
       ? { receiptNumber: "Money Received" } 
       : null;
   }
@@ -31,7 +31,7 @@ const getFilteredPaymentDetails = (paymentMode, paymentDetails) => {
   });
 
   // Special handling for cash payments
-  if (paymentMode === "cash" && !filteredDetails.receiptNumber) {
+  if (paymentMode === "Cash" && !filteredDetails.receiptNumber) {
     filteredDetails.receiptNumber = "Money Received";
   }
 
@@ -62,7 +62,7 @@ router.get("/export/today-collections/excel", protect, async (req, res) => {
 
     // Set columns
     worksheet.columns = [
-      { header: "Retailer", key: "retailer", width: 25 },
+      { header: "Retailer Name", key: "retailer", width: 25 },
       { header: "Bill Number", key: "billNumber", width: 15 },
       { header: "Bill Date", key: "billDate", width: 15 },
       { header: "Collection Amount", key: "collectionAmount", width: 20 },
@@ -100,14 +100,16 @@ router.get("/export/today-collections/excel", protect, async (req, res) => {
           : "N/A",
         collectionAmount: collection.amountCollected,
         dueAmount: collection.bill?.dueAmount || 0,
-        paymentMode: collection.paymentMode,
+        paymentMode: collection.paymentMode 
+  ? collection.paymentMode.charAt(0).toUpperCase() + collection.paymentMode.slice(1).toLowerCase()
+  : "N/A",
         paymentDate: format(new Date(collection.collectedOn), "dd/MM/yyyy"),
         collectedBy: collection.collectedBy?.name || "System",
         chequeNumber: paymentDetails.chequeNumber || "",
         bankName: paymentDetails.bankName || "",
         upiId: paymentDetails.upiId || "",
         transactionId: paymentDetails.transactionId || paymentDetails.upiTransactionId || "",
-        receiptNumber: collection.paymentMode === "cash" 
+        receiptNumber: collection.paymentMode === "Cash" 
           ? (paymentDetails.receiptNumber || "Money Received")
           : ""
       });
@@ -161,12 +163,12 @@ router.get("/export/today-collections/excel", protect, async (req, res) => {
 // Create a new collection
 router.post("/", protect, async (req, res) => {
   try {
-    const { bill, amountCollected, paymentMode, remarks, paymentDetails } = req.body;
+    const { bill, amountCollected, paymentMode, remarks, paymentDetails,collectedOn } = req.body;
 
     // Validate required fields
-    if (!bill || !amountCollected || !paymentMode) {
+    if (!bill || !amountCollected || !paymentMode || !collectedOn) {
       return res.status(400).json({
-        message: "Bill ID, amount collected and payment mode are required",
+        message: "Bill ID, amount collected, payment mode and collection date are required",
       });
     }
 
@@ -227,12 +229,12 @@ router.post("/", protect, async (req, res) => {
       bill,
       amountCollected: amount,
       paymentMode,
-      paymentDetails: paymentMode === "cash" 
+      paymentDetails: paymentMode === "Cash" 
         ? { receiptNumber: paymentDetails?.receiptNumber || "Money Received" }
         : paymentDetails,
       collectedBy: req.user._id,
       remarks,
-      collectedOn: new Date(),
+      collectedOn: new Date(collectedOn), // Use the provided date
     });
 
     await collection.save();

@@ -405,6 +405,7 @@ router.post(
 
           try {
             // Check if bill already exists in database
+            // Check if bill already exists in database (using both billNumber and retailer)
             const existingBill = await Bill.findOne({
               billNumber: billNo,
               retailer: custName,

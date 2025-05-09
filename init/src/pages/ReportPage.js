@@ -5,14 +5,14 @@ import { saveAs } from "file-saver";
 import {
   FaFileExcel,
   FaSearch,
-  FaCalendarAlt,
   FaHistory,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
-import { DateRangePicker } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import Layout from "../components/Layout";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 
 const API_BASE_URL = "https://kalahanu-outstanding.onrender.com/api/admin/reports";
 
@@ -22,89 +22,14 @@ const ReportPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showHistory, setShowHistory] = useState(false); // New state for history view
-  const [dateRange, setDateRange] = useState([
-    {
-      startDate: new Date(),
-      endDate: new Date(),
-      key: "selection",
-    },
-  ]);
-
-  const fetchReports = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      let url = `${API_BASE_URL}`;
-      let params = {};
-
-      if (!showHistory) {
-        url = `${API_BASE_URL}/today-collections`;
-      } else if (dateRange[0].startDate && dateRange[0].endDate) {
-        url = `${API_BASE_URL}`;
-        params = {
-          startDate: format(dateRange[0].startDate, "yyyy-MM-dd"),
-          endDate: format(dateRange[0].endDate, "yyyy-MM-dd"),
-        };
-      }
-
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params,
-      });
-
-      setReports(response.data);
-    } catch (error) {
-      console.error("Error fetching reports:", error);
-      setError(error.response?.data?.message || "Failed to load reports");
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchReports();
-  }, [showHistory]);
-
-  const toggleHistoryView = () => {
-    setShowHistory(!showHistory);
-    setShowDatePicker(false);
-  };
-
-  const handleDateFilter = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await axios.get(
-        `${API_BASE_URL}?startDate=${format(
-          dateRange[0].startDate,
-          "yyyy-MM-dd"
-        )}&endDate=${format(dateRange[0].endDate, "yyyy-MM-dd")}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setReports(response.data);
-      setShowDatePicker(false);
-    } catch (error) {
-      console.error("Error filtering reports:", error);
-      setError(error.response?.data?.message || "Failed to filter reports");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 15,
+    total: 0,
+    pages: 1,
+  });
 
   const handleDownloadTodayCollections = async () => {
     try {
@@ -141,6 +66,114 @@ const ReportPage = () => {
       setLoading(false);
     }
   };
+  const formatPaymentMode = (mode) => {
+  if (!mode) return "N/A";
+  return mode.charAt(0).toUpperCase() + mode.slice(1).toLowerCase();
+};
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      let url = `${API_BASE_URL}`;
+      let params = {};
+
+      if (!showHistory) {
+        url = `${API_BASE_URL}/today-collections`;
+      } else {
+        url = `${API_BASE_URL}/date-collections`;
+        params = {
+          date: format(selectedDate, "yyyy-MM-dd"),
+          page: pagination.page,
+          limit: pagination.limit,
+        };
+      }
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params,
+      });
+
+      if (showHistory) {
+        setReports(response.data.reports || []);
+        setPagination({
+          page: response.data.page,
+          limit: response.data.limit,
+          total: response.data.total,
+          pages: response.data.pages,
+        });
+      } else {
+        setReports(response.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      setError(error.response?.data?.message || "Failed to load reports");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, [showHistory, selectedDate, pagination.page]);
+
+  const toggleHistoryView = () => {
+    setShowHistory(!showHistory);
+    setShowDatePicker(false);
+  };
+
+  const handleDateChange = (days) => {
+    const newDate = subDays(selectedDate, days);
+    setSelectedDate(newDate);
+    setPagination({ ...pagination, page: 1 });
+  };
+
+  const handleDownloadDateCollections = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authentication required");
+        return;
+      }
+
+      const response = await axios.get(
+        `${API_BASE_URL}/export/date-collections/excel`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            date: format(selectedDate, "yyyy-MM-dd"),
+          },
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"],
+      });
+
+      const filename = `collections_${format(selectedDate, "yyyyMMdd")}.xlsx`;
+      saveAs(blob, filename);
+    } catch (error) {
+      console.error("Error downloading collections:", error);
+      setError("Failed to download collections");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.pages) {
+      setPagination({ ...pagination, page: newPage });
+    }
+  };
 
   const filteredReports = reports.filter((report) => {
     const searchTermLower = searchTerm.toLowerCase();
@@ -151,178 +184,320 @@ const ReportPage = () => {
       report.status?.toLowerCase().includes(searchTermLower)
     );
   });
+
   return (
     <Layout>
       <MainContent>
         <Header>
           <h1>
-            {showHistory ? "Historical Collections" : "Today's Collections"}
+            {showHistory
+              ? `Collections for ${format(selectedDate, "dd MMM yyyy")}`
+              : "Today's Collections"}
           </h1>
           <ActionsContainer>
             <HistoryButton onClick={toggleHistoryView}>
               <FaHistory /> {showHistory ? "View Today" : "View History"}
             </HistoryButton>
-            <ExportButton onClick={handleDownloadTodayCollections}>
-              <FaFileExcel /> Export {showHistory ? "Selected" : "Today's"}{" "}
+            <ExportButton
+              onClick={
+                showHistory
+                  ? handleDownloadDateCollections
+                  : handleDownloadTodayCollections
+              }
+            >
+              <FaFileExcel /> Export{" "}
+              {showHistory ? format(selectedDate, "dd MMM") : "Today's"}{" "}
               Collections
             </ExportButton>
           </ActionsContainer>
         </Header>
 
         {showHistory && (
-          <ControlsContainer>
-            <SearchContainer>
-              <FaSearch />
-              <SearchInput
-                type="text"
-                placeholder="Search reports..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </SearchContainer>
-
-            <DateFilterContainer>
-              <DateFilterButton
-                onClick={() => setShowDatePicker(!showDatePicker)}
-              >
-                <FaCalendarAlt /> Filter by Date
-              </DateFilterButton>
-
-              {showDatePicker && (
-                <DatePickerContainer>
-                  <DateRangePicker
-                    onChange={(item) => setDateRange([item.selection])}
-                    showSelectionPreview={true}
-                    moveRangeOnFirstSelection={false}
-                    months={2}
-                    ranges={dateRange}
-                    direction="horizontal"
-                  />
-                  <ApplyDateFilter onClick={handleDateFilter}>
-                    Apply Filter
-                  </ApplyDateFilter>
-                </DatePickerContainer>
+          <>
+            <DateNavigation>
+              <DateNavButton onClick={() => handleDateChange(1)}>
+                <FaChevronLeft /> Previous Day
+              </DateNavButton>
+              <DateDisplay>
+                {format(selectedDate, "EEEE, MMMM d, yyyy")}
+              </DateDisplay>
+              {format(selectedDate, "yyyyMMdd") <
+                format(new Date(), "yyyyMMdd") && (
+                <DateNavButton
+                  onClick={() => handleDateChange(-1)}
+                  disabled={
+                    format(selectedDate, "yyyyMMdd") >=
+                    format(new Date(), "yyyyMMdd")
+                  }
+                >
+                  Next Day <FaChevronRight />
+                </DateNavButton>
               )}
-            </DateFilterContainer>
-          </ControlsContainer>
+            </DateNavigation>
+
+            <ControlsContainer>
+              <SearchContainer>
+                <FaSearch />
+                <SearchInput
+                  type="text"
+                  placeholder="Search reports..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </SearchContainer>
+
+              <PaginationContainer>
+                <PaginationButton
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                >
+                  <FaChevronLeft />
+                </PaginationButton>
+                <PageInfo>
+                  Page {pagination.page} of {pagination.pages}
+                </PageInfo>
+                <PaginationButton
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.pages}
+                >
+                  <FaChevronRight />
+                </PaginationButton>
+              </PaginationContainer>
+            </ControlsContainer>
+          </>
         )}
+
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {loading ? (
           <LoadingIndicator>Loading reports...</LoadingIndicator>
         ) : (
-          <ReportTable>
-            <thead>
-              <tr>
-                <th>Retailer</th>
-                <th>Bill Number</th>
-                <th>Bill Date</th>
-                <th>Collection Amount</th>
-                <th>Due Amount</th>
-                <th>Payment Mode</th>
-                <th>Collection Date</th>
-                <th>Collected By</th>
-                <th>Payment Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredReports.length > 0 ? (
-                filteredReports.flatMap((report) =>
-                  report.collections.length > 0
-                    ? report.collections.map((collection) => (
-                        <tr key={`${report._id}-${collection._id}`}>
-                          <td>{report.retailer}</td>
-                          <td>{report.billNumber}</td>
-                          <td>
-                            {format(new Date(report.billDate), "dd/MM/yyyy")}
-                          </td>
-                          <td>
-                            ₹
-                            {collection.amountCollected?.toLocaleString() ||
-                              "0"}
-                          </td>
-                          <td>₹{report.dueAmount?.toLocaleString() || "0"}</td>
-                          <td>{collection.paymentMode}</td>
-                          <td>
-                            {format(
-                              new Date(collection.paymentDate),
-                              "dd/MM/yyyy"
-                            )}
-                          </td>
-                          <td>{collection.collectedByName || "System"}</td>
-                          <td>
-                            <PaymentDetails>
-                              {collection.paymentMode === "cash" ? (
-                                <div>
-                                  <strong>Receipt:</strong>{" "}
-                                  {collection.paymentDetails?.receiptNumber ||
-                                    "Money Received"}
-                                </div>
-                              ) : collection.paymentMode === "upi" ? (
-                                <div>
-                                  <strong>Transaction ID:</strong>{" "}
-                                  {collection.paymentDetails?.transactionId ||
-                                    collection.paymentDetails
-                                      ?.upiTransactionId ||
-                                    "N/A"}
-                                </div>
-                              ) : collection.paymentMode === "cheque" ? (
-                                <>
-                                  <div>
-                                    <strong>Cheque No:</strong>{" "}
-                                    {collection.paymentDetails?.chequeNumber ||
-                                      "N/A"}
-                                  </div>
-                                  <div>
-                                    <strong>Bank:</strong>{" "}
-                                    {collection.paymentDetails?.bankName ||
-                                      "N/A"}
-                                  </div>
-                                </>
-                              ) : collection.paymentDetails ? (
-                                Object.entries(collection.paymentDetails).map(
-                                  ([key, value]) => (
-                                    <div key={key}>
-                                      <strong>{key}:</strong> {value || "N/A"}
-                                    </div>
-                                  )
-                                )
-                              ) : (
-                                <div>No payment details</div>
-                              )}
-                            </PaymentDetails>
-                          </td>
-                        </tr>
-                      ))
-                    : [
-                        <tr key={report._id}>
-                          <td>{report.retailer}</td>
-                          <td>{report.billNumber}</td>
-                          <td>
-                            {format(new Date(report.billDate), "dd/MM/yyyy")}
-                          </td>
-                          <td>₹0</td>
-                          <td>₹{report.dueAmount?.toLocaleString() || "0"}</td>
-                          <td>N/A</td>
-                          <td>N/A</td>
-                          <td>N/A</td>
-                          <td>No collections</td>
-                        </tr>,
-                      ]
-                )
-              ) : (
+          <>
+            <ReportTable>
+              <thead>
                 <tr>
-                  <td colSpan="9" style={{ textAlign: "center" }}>
-                    No reports found
-                  </td>
+                  <th>Retailer</th>
+                  <th>Inv No</th>
+                  <th>Inv Date</th>
+                  <th>Collection Amount</th>
+                  <th>Due Amount</th>
+                  <th>Payment Mode</th>
+                  <th>Collection Date</th>
+                  <th>Collected By</th>
+                  <th>Payment Details</th>
                 </tr>
-              )}
-            </tbody>
-          </ReportTable>
+              </thead>
+              <tbody>
+                {filteredReports.length > 0 ? (
+                  filteredReports.flatMap((report) =>
+                    report.collections.length > 0
+                      ? report.collections.map((collection) => (
+                          <tr key={`${report._id}-${collection._id}`}>
+                            <td>{report.retailer}</td>
+                            <td>{report.billNumber}</td>
+                            <td>
+                              {format(new Date(report.billDate), "dd/MM/yyyy")}
+                            </td>
+                            <td>
+                              ₹
+                              {collection.amountCollected?.toLocaleString() ||
+                                "0"}
+                            </td>
+                            <td>
+                              ₹{report.dueAmount?.toLocaleString() || "0"}
+                            </td>
+                            <td>{formatPaymentMode(collection.paymentMode)}</td>
+                            <td>
+                              {format(
+                                new Date(collection.paymentDate),
+                                "dd/MM/yyyy"
+                              )}
+                            </td>
+                            <td>{collection.collectedByName || "System"}</td>
+                            <td>
+                              <PaymentDetails>
+                                {collection.paymentMode === "Cash" ? (
+                                  <div>
+                                    <strong>Receipt:</strong>{" "}
+                                    {collection.paymentDetails?.receiptNumber ||
+                                      "Money Received"}
+                                  </div>
+                                ) : collection.paymentMode === "upi" ? (
+                                  <div>
+                                    <strong>Transaction ID:</strong>{" "}
+                                    {collection.paymentDetails?.transactionId ||
+                                      collection.paymentDetails
+                                        ?.upiTransactionId ||
+                                      "N/A"}
+                                  </div>
+                                ) : collection.paymentMode === "cheque" ? (
+                                  <>
+                                    <div>
+                                      <strong>Cheque No:</strong>{" "}
+                                      {collection.paymentDetails
+                                        ?.chequeNumber || "N/A"}
+                                    </div>
+                                    <div>
+                                      <strong>Bank:</strong>{" "}
+                                      {collection.paymentDetails?.bankName ||
+                                        "N/A"}
+                                    </div>
+                                  </>
+                                ) : collection.paymentDetails ? (
+                                  Object.entries(collection.paymentDetails).map(
+                                    ([key, value]) => (
+                                      <div key={key}>
+                                        <strong>{key}:</strong> {value || "N/A"}
+                                      </div>
+                                    )
+                                  )
+                                ) : (
+                                  <div>No payment details</div>
+                                )}
+                              </PaymentDetails>
+                            </td>
+                          </tr>
+                        ))
+                      : [
+                          <tr key={report._id}>
+                            <td>{report.retailer}</td>
+                            <td>{report.billNumber}</td>
+                            <td>
+                              {format(new Date(report.billDate), "dd/MM/yyyy")}
+                            </td>
+                            <td>₹0</td>
+                            <td>
+                              ₹{report.dueAmount?.toLocaleString() || "0"}
+                            </td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>No collections</td>
+                          </tr>,
+                        ]
+                  )
+                ) : (
+                  <tr>
+                    <td colSpan="9" style={{ textAlign: "center" }}>
+                      No reports found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </ReportTable>
+
+            {showHistory && pagination.pages > 1 && (
+              <PaginationContainer>
+                <PaginationButton
+                  onClick={() => handlePageChange(1)}
+                  disabled={pagination.page === 1}
+                >
+                  <FaChevronLeft /> First
+                </PaginationButton>
+                <PaginationButton
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                >
+                  <FaChevronLeft /> Prev
+                </PaginationButton>
+                <PageInfo>
+                  Page {pagination.page} of {pagination.pages}
+                </PageInfo>
+                <PaginationButton
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.pages}
+                >
+                  Next <FaChevronRight />
+                </PaginationButton>
+                <PaginationButton
+                  onClick={() => handlePageChange(pagination.pages)}
+                  disabled={pagination.page === pagination.pages}
+                >
+                  Last <FaChevronRight />
+                </PaginationButton>
+              </PaginationContainer>
+            )}
+          </>
         )}
       </MainContent>
     </Layout>
   );
 };
+
+// Add these new styled components
+const DateNavigation = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f8f9fc;
+  border-radius: 4px;
+`;
+
+const DateNavButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  background-color: #4e73df;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #3a5bc7;
+  }
+
+  &:disabled {
+    background-color: #b7b9cc;
+    cursor: not-allowed;
+  }
+`;
+
+const DateDisplay = styled.div`
+  font-weight: 600;
+  color: #2e3a59;
+`;
+
+const PaginationContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+`;
+
+const PaginationButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  background-color: #4e73df;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  min-width: 80px;
+
+  &:hover {
+    background-color: #3a5bc7;
+  }
+
+  &:disabled {
+    background-color: #b7b9cc;
+    cursor: not-allowed;
+  }
+`;
+
+const PageInfo = styled.span`
+  font-size: 0.9rem;
+  color: #6e707e;
+  padding: 0 10px;
+`;
 
 // Styled components (responsive version)
 const MainContent = styled.div`
@@ -357,7 +532,7 @@ const Header = styled.header`
     font-size: 1.5rem;
     margin: 0;
     font-weight: 600;
-    
+
     @media (min-width: 768px) {
       font-size: 1.8rem;
     }
