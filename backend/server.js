@@ -9,6 +9,10 @@ const collectionRoutes = require('./routes/collectionRoutes');
 const adminDashboardRoutes = require('./routes/adminDashboardRoutes'); 
 const staffRoutes = require('./routes/staffRoutes');
 const reportRoutes = require('./routes/reportRoutes'); 
+const retailerRoutes = require('./routes/retailerRoutes');
+const productRoutes = require('./routes/productRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -24,5 +28,12 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/admin', adminDashboardRoutes); 
 app.use('/api/staff', staffRoutes); 
 app.use('/api/admin/reports', reportRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/retailers', retailerRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
 const PORT = 2500;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Set the timezone for the entire application
+process.env.TZ = 'Asia/Kolkata';
+console.log('Application timezone set to:', process.env.TZ);

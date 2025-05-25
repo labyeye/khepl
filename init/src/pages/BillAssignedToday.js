@@ -328,12 +328,9 @@ const BillAssignedToday = () => {
 
   return (
     <DashboardLayout>
-      <Sidebar collapsed={sidebarCollapsed.toString()}>
+      <Sidebar collapsed={sidebarCollapsed}>
         <SidebarHeader>
           <Logo>BillTrack</Logo>
-          <ToggleButton onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
-            {sidebarCollapsed ? <FaChevronRight /> : <FaChevronDown />}
-          </ToggleButton>
         </SidebarHeader>
         <UserProfile>
           <UserAvatar>
@@ -351,12 +348,13 @@ const BillAssignedToday = () => {
             <NavIcon>
               <FaHome />
             </NavIcon>
-            {!sidebarCollapsed && (
-              <>
-                <NavText>Dashboard</NavText>
-                <NavCheckmark>☐</NavCheckmark>
-              </>
-            )}
+            {!sidebarCollapsed && <NavText>Dashboard</NavText>}
+          </NavItem>
+          <NavItem onClick={() => navigate("/staff/order-create")}>
+            <NavIcon>
+              <FaMoneyBillWave />
+            </NavIcon>
+            {!sidebarCollapsed && <NavText>Order Create</NavText>}
           </NavItem>
 
           <NavItemWithSubmenu>
@@ -381,6 +379,7 @@ const BillAssignedToday = () => {
             {!sidebarCollapsed && activeSubmenu === "collections" && (
               <Submenu>
                 <SubmenuItem
+                  active
                   onClick={() => navigate("/staff/bill-assigned-today")}
                 >
                   <NavText>Assigned Today</NavText>
@@ -392,7 +391,6 @@ const BillAssignedToday = () => {
                 >
                   <SubmenuItem>
                     <NavText>History</NavText>
-                    <NavCheckmark>☐</NavCheckmark>
                   </SubmenuItem>
                 </Link>
               </Submenu>

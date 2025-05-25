@@ -24,6 +24,10 @@ const ReportPage = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState({
+    startDate: subDays(new Date(), 7),
+    endDate: new Date(),
+  });
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 15,
@@ -67,9 +71,9 @@ const ReportPage = () => {
     }
   };
   const formatPaymentMode = (mode) => {
-  if (!mode) return "N/A";
-  return mode.charAt(0).toUpperCase() + mode.slice(1).toLowerCase();
-};
+    if (!mode) return "N/A";
+    return mode.charAt(0).toUpperCase() + mode.slice(1).toLowerCase();
+  };
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -86,7 +90,8 @@ const ReportPage = () => {
       } else {
         url = `${API_BASE_URL}/date-collections`;
         params = {
-          date: format(selectedDate, "yyyy-MM-dd"),
+          startDate: format(dateRange.startDate, "yyyy-MM-dd"),
+          endDate: format(dateRange.endDate, "yyyy-MM-dd"),
           page: pagination.page,
           limit: pagination.limit,
         };
@@ -149,7 +154,8 @@ const ReportPage = () => {
             Authorization: `Bearer ${token}`,
           },
           params: {
-            date: format(selectedDate, "yyyy-MM-dd"),
+            startDate: format(dateRange.startDate, "yyyy-MM-dd"),
+            endDate: format(dateRange.endDate, "yyyy-MM-dd"),
           },
           responseType: "blob",
         }
@@ -159,7 +165,10 @@ const ReportPage = () => {
         type: response.headers["content-type"],
       });
 
-      const filename = `collections_${format(selectedDate, "yyyyMMdd")}.xlsx`;
+      const filename = `collections_${format(
+        dateRange.startDate,
+        "yyyyMMdd"
+      )}_to_${format(dateRange.endDate, "yyyyMMdd")}.xlsx`;
       saveAs(blob, filename);
     } catch (error) {
       console.error("Error downloading collections:", error);
@@ -205,36 +214,50 @@ const ReportPage = () => {
                   : handleDownloadTodayCollections
               }
             >
-              <FaFileExcel /> Export{" "}
-              {showHistory ? format(selectedDate, "dd MMM") : "Today's"}{" "}
-              Collections
+              <FaFileExcel /> Export{" "} Collections
             </ExportButton>
           </ActionsContainer>
         </Header>
 
         {showHistory && (
           <>
-            <DateNavigation>
-              <DateNavButton onClick={() => handleDateChange(1)}>
-                <FaChevronLeft /> Previous Day
-              </DateNavButton>
-              <DateDisplay>
-                {format(selectedDate, "EEEE, MMMM d, yyyy")}
-              </DateDisplay>
-              {format(selectedDate, "yyyyMMdd") <
-                format(new Date(), "yyyyMMdd") && (
-                <DateNavButton
-                  onClick={() => handleDateChange(-1)}
-                  disabled={
-                    format(selectedDate, "yyyyMMdd") >=
-                    format(new Date(), "yyyyMMdd")
+            // Replace the DateNavigation component with this:
+            <DateRangeContainer>
+              <DateRangeGroup>
+                <DateLabel>From:</DateLabel>
+                <DateInput
+                  type="date"
+                  value={format(dateRange.startDate, "yyyy-MM-dd")}
+                  onChange={(e) =>
+                    setDateRange({
+                      ...dateRange,
+                      startDate: new Date(e.target.value),
+                    })
                   }
-                >
-                  Next Day <FaChevronRight />
-                </DateNavButton>
-              )}
-            </DateNavigation>
+                  max={format(dateRange.endDate, "yyyy-MM-dd")}
+                />
+              </DateRangeGroup>
 
+              <DateRangeGroup>
+                <DateLabel>To:</DateLabel>
+                <DateInput
+                  type="date"
+                  value={format(dateRange.endDate, "yyyy-MM-dd")}
+                  onChange={(e) =>
+                    setDateRange({
+                      ...dateRange,
+                      endDate: new Date(e.target.value),
+                    })
+                  }
+                  min={format(dateRange.startDate, "yyyy-MM-dd")}
+                  max={format(new Date(), "yyyy-MM-dd")}
+                />
+              </DateRangeGroup>
+
+              <SearchButton onClick={() => fetchReports()}>
+                <FaSearch /> Search
+              </SearchButton>
+            </DateRangeContainer>
             <ControlsContainer>
               <SearchContainer>
                 <FaSearch />
@@ -423,7 +446,6 @@ const ReportPage = () => {
   );
 };
 
-// Add these new styled components
 const DateNavigation = styled.div`
   display: flex;
   justify-content: space-between;
@@ -432,6 +454,52 @@ const DateNavigation = styled.div`
   padding: 10px;
   background-color: #f8f9fc;
   border-radius: 4px;
+`;
+const DateRangeContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f8f9fc;
+  border-radius: 4px;
+  flex-wrap: wrap;
+`;
+
+const DateRangeGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const DateLabel = styled.span`
+  font-weight: 500;
+  color: #6e707e;
+`;
+
+const DateInput = styled.input`
+  padding: 8px 12px;
+  border: 1px solid #d1d3e2;
+  border-radius: 4px;
+  font-size: 0.9rem;
+`;
+
+const SearchButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  background-color: #4e73df;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #3a5bc7;
+  }
 `;
 
 const DateNavButton = styled.button`
@@ -499,7 +567,6 @@ const PageInfo = styled.span`
   padding: 0 10px;
 `;
 
-// Styled components (responsive version)
 const MainContent = styled.div`
   flex: 1;
   padding: 15px;
@@ -642,75 +709,6 @@ const SearchInput = styled.input`
 
   &::placeholder {
     color: #b7b9cc;
-  }
-`;
-
-const DateFilterContainer = styled.div`
-  position: relative;
-  width: 100%;
-
-  @media (min-width: 576px) {
-    width: auto;
-  }
-`;
-
-const DateFilterButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px 15px;
-  background-color: #f8f9fc;
-  color: #6e707e;
-  border: 1px solid #d1d3e2;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-  width: 100%;
-  font-size: 0.9rem;
-
-  &:hover {
-    background-color: #eaecf4;
-  }
-
-  @media (min-width: 576px) {
-    width: auto;
-    justify-content: flex-start;
-  }
-`;
-
-const DatePickerContainer = styled.div`
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 100;
-  background: white;
-  border: 1px solid #d1d3e2;
-  border-radius: 4px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 5px;
-  width: 100%;
-
-  @media (min-width: 576px) {
-    width: auto;
-  }
-`;
-
-const ApplyDateFilter = styled.button`
-  width: 100%;
-  padding: 10px;
-  background-color: #4e73df;
-  color: white;
-  border: none;
-  border-radius: 0 0 4px 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  font-size: 0.9rem;
-
-  &:hover {
-    background-color: #3a5bc7;
   }
 `;
 

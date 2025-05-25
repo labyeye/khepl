@@ -30,7 +30,7 @@ const StaffDashboard = () => {
     totalCompletedBills: 0,
     overdueBillsCount: 0,
     collectionsToday: [],
-    collectionsHistory: []
+    collectionsHistory: [],
   });
 
   const [staffInfo, setStaffInfo] = useState({
@@ -68,11 +68,11 @@ const StaffDashboard = () => {
       setError("");
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Authentication token not found");
-  
+
       const response = await axios.get(`${API_BASE_URL}/staff/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       setDashboardData({
         staffName: response.data.staffName || "",
         totalBillAmount: response.data.totalBillAmount || 0,
@@ -81,7 +81,7 @@ const StaffDashboard = () => {
         totalCompletedBills: response.data.totalCompletedBills || 0,
         overdueBillsCount: response.data.overdueBillsCount || 0,
         collectionsToday: response.data.collectionsToday || [],
-        collectionsHistory: response.data.recentCollections || []
+        collectionsHistory: response.data.recentCollections || [],
       });
     } catch (err) {
       setError(
@@ -149,32 +149,35 @@ const StaffDashboard = () => {
       <Sidebar collapsed={sidebarCollapsed}>
         <SidebarHeader>
           <Logo>BillTrack</Logo>
-          <ToggleButton onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
-            {sidebarCollapsed ? <FaChevronRight /> : <FaChevronDown />}
-          </ToggleButton>
         </SidebarHeader>
         <UserProfile>
           <UserAvatar>
             <FaUserCircle size={sidebarCollapsed ? 24 : 32} />
           </UserAvatar>
-          {!sidebarCollapsed && (
+          {
             <UserInfo>
               <UserName>{staffInfo.name}</UserName>
               <UserRole>DSR</UserRole>
             </UserInfo>
-          )}
+          }
         </UserProfile>
         <NavMenu>
-          <NavItem active>
+          <NavItem active onClick={() => navigate("/staff")}>
             <NavIcon>
               <FaHome />
             </NavIcon>
-            {!sidebarCollapsed && (
+            {
               <>
                 <NavText>Dashboard</NavText>
                 <NavCheckmark>☑</NavCheckmark>
               </>
-            )}
+            }
+          </NavItem>
+          <NavItem onClick={() => navigate("/staff/order-create")}>
+            <NavIcon>
+              <FaMoneyBillWave />
+            </NavIcon>
+            {<NavText>Order Create</NavText>}
           </NavItem>
 
           <NavItemWithSubmenu>
@@ -182,7 +185,7 @@ const StaffDashboard = () => {
               <NavIcon>
                 <FaMoneyCheckAlt />
               </NavIcon>
-              {!sidebarCollapsed && (
+              {
                 <>
                   <NavText>Collections</NavText>
                   <NavArrow>
@@ -193,10 +196,10 @@ const StaffDashboard = () => {
                     )}
                   </NavArrow>
                 </>
-              )}
+              }
             </NavItemMain>
 
-            {!sidebarCollapsed && activeSubmenu === "collections" && (
+            {activeSubmenu === "collections" && (
               <Submenu>
                 <Link
                   to="/staff/bill-assigned-today"
@@ -590,14 +593,23 @@ const Sidebar = styled.div`
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  position: relative;
-  z-index: 1;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: auto;
+
+  /* Remove overflow: hidden and max-height constraints for mobile */
+  @media (max-width: 767px) {
+    height: auto;
+    overflow: visible;
+    max-height: none;
+  }
 
   @media (min-width: 768px) {
     width: ${(props) => (props.collapsed ? "80px" : "250px")};
     height: 100vh;
-    position: sticky;
-    top: 0;
+    max-height: 100vh;
+    overflow-y: auto;
   }
 `;
 const SidebarHeader = styled.div`
@@ -614,15 +626,6 @@ const Logo = styled.div`
   font-weight: 600;
   color: #4e73df;
   white-space: nowrap;
-`;
-
-const ToggleButton = styled.button`
-  background: none;
-  border: none;
-  color: #6c757d;
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 5px;
 `;
 
 const UserProfile = styled.div`
@@ -743,7 +746,6 @@ const MainContent = styled.div`
   width: 100%;
 
   @media (min-width: 768px) {
-    overflow-y: auto;
     max-height: 100vh;
   }
 `;

@@ -13,6 +13,7 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const spin = keyframes`
   0% { transform: rotate(0deg); }
@@ -149,9 +150,6 @@ const CollectionsHistory = () => {
       <Sidebar collapsed={sidebarCollapsed}>
         <SidebarHeader>
           <Logo>BillTrack</Logo>
-          <ToggleButton onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
-            {sidebarCollapsed ? <FaChevronRight /> : <FaChevronDown />}
-          </ToggleButton>
         </SidebarHeader>
         <UserProfile>
           <UserAvatar>
@@ -170,6 +168,12 @@ const CollectionsHistory = () => {
               <FaHome />
             </NavIcon>
             {!sidebarCollapsed && <NavText>Dashboard</NavText>}
+          </NavItem>
+          <NavItem onClick={() => navigate("/staff/order-create")}>
+            <NavIcon>
+              <FaMoneyBillWave />
+            </NavIcon>
+            {!sidebarCollapsed && <NavText>Order Create</NavText>}
           </NavItem>
 
           <NavItemWithSubmenu>
@@ -193,13 +197,20 @@ const CollectionsHistory = () => {
 
             {!sidebarCollapsed && activeSubmenu === "collections" && (
               <Submenu>
-                <SubmenuItem
-                  onClick={() => navigate("/staff/bill-assigned-today")}
+                <Link
+                  to="/staff/bill-assigned-today"
+                  style={{ textDecoration: "none" }}
                 >
-                  <NavText>Assigned Today</NavText>
-                </SubmenuItem>
-                <SubmenuItem active>
+                  <SubmenuItem>
+                    <NavText>Assigned Today</NavText>
+                  </SubmenuItem>
+                </Link>
+                <SubmenuItem
+                  active
+                  onClick={() => navigate("/staff/collections-history")}
+                >
                   <NavText>History</NavText>
+                  <NavCheckmark>☑</NavCheckmark>
                 </SubmenuItem>
               </Submenu>
             )}
@@ -212,7 +223,6 @@ const CollectionsHistory = () => {
           {!sidebarCollapsed && <NavText>Logout</NavText>}
         </LogoutButton>
       </Sidebar>
-
       <MainContent>
         <TopBar>
           <PageTitle>Collections History</PageTitle>
@@ -475,24 +485,10 @@ const PageTitle = styled.h1`
     font-size: 1.5rem;
   }
 `;
-
-// For mobile devices, you might want to hide some columns
-const ResponsiveTableCell = styled(TableCell)`
-  @media (max-width: 768px) {
-    &:nth-child(4),
-    &:nth-child(6) {
-      display: none;
-    }
-  }
-`;
-
-const ResponsiveTableHeaderCell = styled(TableHeaderCell)`
-  @media (max-width: 768px) {
-    &:nth-child(4),
-    &:nth-child(6) {
-      display: none;
-    }
-  }
+const NavCheckmark = styled.span`
+  margin-left: auto;
+  font-size: 0.9rem;
+  color: ${(props) => (props.active ? "#4e73df" : "#6c757d")};
 `;
 
 const TableHeader = styled.thead`
@@ -520,7 +516,7 @@ const PaymentMode = styled.span`
   font-size: 0.75rem;
   font-weight: 600;
   background-color: ${(props) =>
-    props.mode === "cash"
+    props.mode === "Cash"
       ? "#1cc88a20"
       : props.mode === "upi"
       ? "#4e73df20"
@@ -528,7 +524,7 @@ const PaymentMode = styled.span`
       ? "#36b9cc20"
       : "#f6c23e20"};
   color: ${(props) =>
-    props.mode === "cash"
+    props.mode === "Cash"
       ? "#1cc88a"
       : props.mode === "upi"
       ? "#4e73df"
@@ -568,16 +564,6 @@ const Logo = styled.div`
   color: #4e73df;
   white-space: nowrap;
 `;
-
-const ToggleButton = styled.button`
-  background: none;
-  border: none;
-  color: #6c757d;
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 5px;
-`;
-
 const UserProfile = styled.div`
   display: flex;
   align-items: center;

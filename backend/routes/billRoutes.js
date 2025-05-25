@@ -114,7 +114,7 @@ router.put("/:billId/assign", protect, adminOnly, async (req, res) => {
 
 router.get("/", protect, async (req, res) => {
   try {
-    let query = {};
+    let query = { deleted: false };
     if (req.user.role !== "admin") {
       query.assignedTo = req.user._id;
     }
@@ -187,19 +187,25 @@ router.put("/:id", protect, async (req, res) => {
     });
   }
 });
-
 router.delete("/:id", protect, adminOnly, async (req, res) => {
   try {
-    await Collection.deleteMany({ bill: req.params.id });
-    const bill = await Bill.findByIdAndDelete(req.params.id);
+    const bill = await Bill.findByIdAndUpdate(
+      req.params.id,
+      {
+        deleted: true,
+        deletedAt: new Date(),
+        deletedBy: req.user._id,  // Optional: Track who deleted it
+      },
+      { new: true }
+    );
+
     if (!bill) {
       return res.status(404).json({ message: "Bill not found" });
     }
-    res.json({ message: "Bill deleted successfully" });
+
+    res.json({ message: "Bill marked as deleted", bill });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Failed to delete bill", error: err.message });
+    res.status(500).json({ message: "Failed to delete bill", error: err.message });
   }
 });
 router.post(
