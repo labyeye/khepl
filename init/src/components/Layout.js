@@ -1,84 +1,157 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import styled from 'styled-components';
-import { 
-  FaTachometerAlt, 
-  FaHistory, 
-  FaFileInvoiceDollar, 
-  FaPlusCircle, 
-  FaUsers, 
-  FaSignOutAlt, 
-  FaChartBar
-} from 'react-icons/fa';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import styled from "styled-components";
+import {
+  FaTachometerAlt,
+  FaHistory,
+  FaFileInvoiceDollar,
+  FaPlusCircle,
+  FaUsers,
+  FaSignOutAlt,
+  FaChartBar,
+  FaList,
+  FaShoppingCart,
+  FaBoxes
+} from "react-icons/fa";
 
 const Layout = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
   const location = useLocation();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
   };
 
   return (
     <Container>
       <Sidebar>
         <LogoContainer>
-          <h2>Kalahanu Enterprises Private Limited (Admin)</h2>
+          <h2>Kalahanu Enterprises Private Limited (Admin Panel)</h2>
         </LogoContainer>
         <NavMenu>
-          <NavItem active={location.pathname === '/admin'}>
+          <NavItem active={location.pathname === "/admin"}>
             <FaTachometerAlt />
             <span>Dashboard</span>
             <Link to="/admin" />
           </NavItem>
-          <NavItem active={location.pathname === '/admin/bill-collection-history'}>
+          
+          {/* Orders Section */}
+          <NavSectionHeader>
+            <FaShoppingCart />
+            <span>Orders</span>
+          </NavSectionHeader>
+          <NavItem active={location.pathname === "/admin/add-retailer"}>
+            <FaPlusCircle />
+            <span>Add Retailer</span>
+            <Link to="/admin/add-retailer" />
+          </NavItem>
+          <NavItem active={location.pathname === "/admin/view-retailer"}>
+            <FaList />
+            <span>Retailer Details</span>
+            <Link to="/admin/view-retailer" />
+          </NavItem>
+          <NavItem active={location.pathname === "/admin/add-product"}>
+            <FaPlusCircle />
+            <span>Add Product</span>
+            <Link to="/admin/add-product" />
+          </NavItem>
+          <NavItem active={location.pathname === "/admin/view-product"}>
+            <FaList />
+            <span>Product Details</span>
+            <Link to="/admin/view-product" />
+          </NavItem>
+          <NavItem active={location.pathname === "/admin/view-product"}>
+            <FaList />
+            <span>Order Details</span>
+            <Link to="/admin/order-list" />
+          </NavItem>
+          
+          {/* Collections Section */}
+          <NavSectionHeader>
+            <FaBoxes />
+            <span>Collections</span>
+          </NavSectionHeader>
+          <NavItem
+            active={location.pathname === "/admin/bill-collection-history"}
+          >
             <FaHistory />
-            <span>Collection History</span>
+            <span>DSR Summary</span>
             <Link to="/admin/bill-collection-history" />
           </NavItem>
-          <NavItem active={location.pathname === '/admin/bills-add'}>
+          <NavItem active={location.pathname === "/admin/bills-add"}>
             <FaPlusCircle />
             <span>Add Bills</span>
             <Link to="/admin/bills-add" />
           </NavItem>
-          <NavItem active={location.pathname === '/admin/bills'}>
+          <NavItem active={location.pathname === "/admin/bills"}>
             <FaFileInvoiceDollar />
             <span>Bills</span>
             <Link to="/admin/bills" />
           </NavItem>
-          <NavItem active={location.pathname === '/admin/reports'}>
+          <NavItem active={location.pathname === "/admin/reports"}>
             <FaChartBar />
             <span>Reports</span>
             <Link to="/admin/reports" />
           </NavItem>
-          <NavItem active={location.pathname === '/admin/users'}>
+          
+          {/* Users Section */}
+          <NavItem active={location.pathname === "/admin/users"}>
             <FaUsers />
             <span>Users</span>
             <Link to="/admin/users" />
           </NavItem>
+          
+          {/* Logout */}
           <NavItem onClick={handleLogout}>
             <FaSignOutAlt />
             <span>Logout</span>
           </NavItem>
         </NavMenu>
         <UserProfile>
-          <img src={`https://ui-avatars.com/api/?name=${user?.name || 'Admin'}&background=667eea&color=fff`} alt="User" />
+          <img
+            src={`https://ui-avatars.com/api/?name=${
+              user?.name || "Admin"
+            }&background=667eea&color=fff`}
+            alt="User"
+          />
           <div>
-            <UserName>{user?.name || 'Admin'}</UserName>
-            <UserRole>{user?.role || 'Administrator'}</UserRole>
+            <UserName>{user?.name || "Admin"}</UserName>
+            <UserRole>{user?.role || "Administrator"}</UserRole>
           </div>
         </UserProfile>
       </Sidebar>
-      <MainContent>
-        {children}
-      </MainContent>
+      <MainContent>{children}</MainContent>
     </Container>
   );
 };
 
-export default Layout;
+// Add these new styled components
+const NavSectionHeader = styled.div`
+  padding: 12px 25px;
+  display: flex;
+  align-items: center;
+  color: #6e707e;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-top: 15px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 20px;
+
+  svg {
+    margin-right: 15px;
+    font-size: 0.9rem;
+    color: #6e707e;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
 
 // Styled Components
 const Container = styled.div`
@@ -97,7 +170,7 @@ const Sidebar = styled.div`
 
   @media (max-width: 768px) {
     width: 80px;
-    
+
     span {
       display: none;
     }
@@ -139,13 +212,14 @@ const NavItem = styled.li`
   cursor: pointer;
   transition: all 0.3s ease;
   border-left: 3px solid transparent;
-  border-left-color: ${props => props.active ? '#4e73df' : 'transparent'};
-  background-color: ${props => props.active ? 'rgba(78, 115, 223, 0.05)' : 'transparent'};
+  border-left-color: ${(props) => (props.active ? "#4e73df" : "transparent")};
+  background-color: ${(props) =>
+    props.active ? "rgba(78, 115, 223, 0.05)" : "transparent"};
 
   svg {
     margin-right: 15px;
     font-size: 1rem;
-    color: ${props => props.active ? '#4e73df' : '#6e707e'};
+    color: ${(props) => (props.active ? "#4e73df" : "#6e707e")};
     flex-shrink: 0;
   }
 
@@ -171,7 +245,7 @@ const NavItem = styled.li`
   &:hover {
     background-color: rgba(78, 115, 223, 0.1);
     color: #4e73df;
-    
+
     svg {
       color: #4e73df;
     }
@@ -225,3 +299,4 @@ const MainContent = styled.div`
     padding: 40px;
   }
 `;
+export default Layout;
